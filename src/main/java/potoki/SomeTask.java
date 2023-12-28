@@ -9,14 +9,21 @@ public class SomeTask {
     private static final int TO_NUMBER_SECOND_THREAD=1000;
     private static final String TEMPLATE_MESSAGE_THREAD_NAME_AND_NUMBER="%s : %d\n";
 
-    public static void main(String[] args) {
+    private static final int TIME_WAITING_IN_MILLIS=1000;
+
+    public static void main(String[] args) throws InterruptedException {
         final TaskSummingNumbers firstTask=startSubTask(FROM_NUMBER_FIRST_THREAD,TO_NUMBER_FIRST_THREAD);
 
         final TaskSummingNumbers secondTask=startSubTask(FROM_NUMBER_SECOND_THREAD,TO_NUMBER_SECOND_THREAD);
 
+        waitForTasksFinished();
+
         final int resultNumber= firstTask.getResultNumber()+secondTask.getResultNumber();
 
         printThreadNameAndNumber(resultNumber);
+    }
+    private static void waitForTasksFinished() throws InterruptedException{
+        Thread.sleep(TIME_WAITING_IN_MILLIS);
     }
     private static TaskSummingNumbers startSubTask(final int fromNumber,final int toNumber){
         final TaskSummingNumbers subTask=new TaskSummingNumbers(fromNumber,toNumber);
