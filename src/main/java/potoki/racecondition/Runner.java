@@ -22,7 +22,10 @@ public class Runner {
     }
     private static Thread createIncrementingCounterThread(final int incrementAmount){
         return new Thread(()->
-                range(0,incrementAmount).forEach(i->counter++)
+                range(0,incrementAmount).forEach(i->incrementCounter())
         );
+    }
+    private static synchronized void incrementCounter(){
+        counter++;
     }
 }
