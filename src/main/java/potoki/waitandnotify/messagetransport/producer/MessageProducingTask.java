@@ -6,14 +6,27 @@ import potoki.waitandnotify.messagetransport.model.Message;
 import java.util.concurrent.TimeUnit;
 
 public final class MessageProducingTask implements Runnable {
-    private static final String MESSAGE_OF_MESSAGE_IS_PRODUCE="Message '%s' is produced.\n";
-    private static final int SECONDS_DURATION_TO_SLEEP_BEFORE_PRODUCING= 3;
+
+    private static final int SECONDS_DURATION_TO_SLEEP_BEFORE_PRODUCING= 1;
     private final MessageBroker messageBroker;
     private final MessageFactory messageFactory;
+    private final int maximalAmountMessagesToProduce;
+    private final String name;
 
-    public MessageProducingTask(final MessageBroker messageBroker){
+    public MessageProducingTask(final MessageBroker messageBroker,final MessageFactory messageFactory,
+                                final int maximalAmountMessagesToProduce,final String name){
         this.messageBroker=messageBroker;
-        this.messageFactory=new MessageFactory();
+        this.messageFactory=messageFactory;
+        this.maximalAmountMessagesToProduce =maximalAmountMessagesToProduce;
+        this.name=name;
+    }
+
+    public int getMaximalAmountMessagesToProduce() {
+        return this.maximalAmountMessagesToProduce;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
     @Override
@@ -22,24 +35,12 @@ public final class MessageProducingTask implements Runnable {
             while (!Thread.currentThread().isInterrupted()) {
                 final Message producedMessage = this.messageFactory.create();
                 TimeUnit.SECONDS.sleep(SECONDS_DURATION_TO_SLEEP_BEFORE_PRODUCING);
-                this.messageBroker.produce(producedMessage);
-                System.out.printf(MESSAGE_OF_MESSAGE_IS_PRODUCE, producedMessage);
+                this.messageBroker.produce(producedMessage,this);
             }
         }catch (final InterruptedException interruptedException){
             Thread.currentThread().interrupt();
         }
     }
 
-    private static final class MessageFactory{
-        private static final int INITIAL_NEXT_MESSAGE_INDEX=1;
-        private static final String TEMPLATE_CREATED_MESSAGE_DATA="Message#%d";
-        private int nextMessageIndex;
 
-        public MessageFactory(){
-            this.nextMessageIndex=INITIAL_NEXT_MESSAGE_INDEX;
-        }
-        public Message create(){
-            return new Message(String.format(TEMPLATE_CREATED_MESSAGE_DATA,this.nextMessageIndex++));
-        }
-    }
 }
