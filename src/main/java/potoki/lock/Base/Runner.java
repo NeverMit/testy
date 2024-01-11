@@ -1,4 +1,4 @@
-package potoki.lock;
+package potoki.lock.Base;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,14 +30,18 @@ public class Runner {
             this.previousGenerated = -2;
         }
         public int generate(){
-            this.lock.lock();
+            return this.lock.tryLock() ? this.onSuccessAcquireLock() : this.onFailAcquireLock();
+        }
+        private int onSuccessAcquireLock(){
             try {
                 return this.previousGenerated+=2;
             }finally {
                 this.lock.unlock();
             }
-
         }
-
+        private int onFailAcquireLock(){
+            System.out.printf("Thread '%s' didn't acquire lock.\n",Thread.currentThread().getName());
+            throw new RuntimeException();
+        }
     }
 }
