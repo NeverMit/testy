@@ -1,7 +1,5 @@
 package potoki.condition;
 
-import org.checkerframework.checker.units.qual.C;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.locks.Condition;
@@ -12,13 +10,15 @@ import java.util.stream.Collectors;
 public final class BoundedBuffer<T> {
     private final T[] elements;
     private final Lock lock;
-    private final Condition condition;
+    private final Condition notFull;
+    private final Condition notEmpty;
     private int size;
     @SuppressWarnings("unchecked")
     public BoundedBuffer(final int capacity) {
         this.elements=(T[]) new Object[capacity];
         this.lock=new ReentrantLock();
-        this.condition=this.lock.newCondition();
+        this.notFull =this.lock.newCondition();
+        this.notEmpty=this.lock.newCondition();
     }
     public boolean isFull(){
         this.lock.lock();
@@ -40,12 +40,12 @@ public final class BoundedBuffer<T> {
         this.lock.lock();
         try {
             while (this.isFull()) {
-                this.condition.await();
+                this.notFull.await();
             }
             this.elements[this.size] = element;
             this.size++;
             System.out.printf("%s was put in buffer. Result buffer: %s%n",element,this);
-            this.condition.signalAll();
+            this.notEmpty.signal();
         }catch (final InterruptedException interruptedException){
             Thread.currentThread().interrupt();
         }finally {
@@ -56,13 +56,13 @@ public final class BoundedBuffer<T> {
         this.lock.lock();
         try {
             while (this.isEmpty()) {
-                this.condition.await();
+                this.notEmpty.await();
             }
             final T result = this.elements[this.size - 1];
             this.elements[this.size - 1] = null;
             this.size--;
             System.out.printf("%s was taken from buffer. Result buffer: %s%n",result,this);
-            this.condition.signalAll();
+            this.notFull.signal();
             return result;
         }catch (final InterruptedException interruptedException){
             Thread.currentThread().interrupt();
