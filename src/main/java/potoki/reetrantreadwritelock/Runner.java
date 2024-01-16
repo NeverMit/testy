@@ -5,8 +5,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+//before updating AbstractCounter::getValue()
 //171629016-Amount of readings value with simple Lock
 //22973195-Amount of readings value with ReadWriteLock
+
+//after updating AbstractCounter::getValue()
+//54-Amount of readings value with simple Lock
+//239-Amount of reading value with ReadWriteLock
 public class Runner {
     public static void main(String[] args) throws InterruptedException {
         testCounter(CounterGuardedReadWriteLock::new);
@@ -33,6 +38,7 @@ public class Runner {
         interruptThreads(incrementingCounterThreads);
 
         waitUntilFinish(readingValueThreads);
+
         final long totalAmountOfReads=findTotalAmountOfReads(readingValueTasks);
         System.out.printf("Amount of readings value: "+totalAmountOfReads );
     }
