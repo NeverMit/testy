@@ -1,5 +1,6 @@
 package potoki.deadlock;
 
+import java.awt.desktop.ScreenSleepEvent;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
@@ -21,12 +22,21 @@ public final class Task implements Runnable{
         this.firstLock.lock();
         try {
             System.out.printf(MESSAGE_TEMPLATE_SUCCESS_ACQUIRE_LOCK,currentThreadName,NAME_FIRST_LOCK);
-            TimeUnit.MILLISECONDS.sleep(200);
-            System.out.printf(MESSAGE_TEMPLATE_TRY_ACQUIRE_LOCK,currentThreadName,NAME_SECOND_LOCK);
-            this.secondLock.lock();
-            try {
+            TimeUnit.MILLISECONDS.sleep(50);
+            while (!this.tryAcquireSecondLock()){
+                TimeUnit.MILLISECONDS.sleep(50);
+                this.firstLock.unlock();
+                System.out.printf(MESSAGE_TEMPLATE_RELEASE_LOCK,currentThreadName,NAME_FIRST_LOCK);
+                TimeUnit.MILLISECONDS.sleep(50);
+                System.out.printf(MESSAGE_TEMPLATE_TRY_ACQUIRE_LOCK,currentThreadName,NAME_FIRST_LOCK);
+                this.firstLock.lock();
+                System.out.printf(MESSAGE_TEMPLATE_SUCCESS_ACQUIRE_LOCK,currentThreadName,NAME_FIRST_LOCK);
+                TimeUnit.MILLISECONDS.sleep(50);
+            }
+            try{
                 System.out.printf(MESSAGE_TEMPLATE_SUCCESS_ACQUIRE_LOCK,currentThreadName,NAME_SECOND_LOCK);
-            }finally {
+            }
+            finally {
                 this.secondLock.unlock();
                 System.out.printf(MESSAGE_TEMPLATE_RELEASE_LOCK,currentThreadName,NAME_SECOND_LOCK);
             }
@@ -35,7 +45,12 @@ public final class Task implements Runnable{
         }
         finally {
             this.firstLock.unlock();
-            System.out.printf(MESSAGE_TEMPLATE_SUCCESS_ACQUIRE_LOCK,currentThreadName,NAME_FIRST_LOCK);
+            System.out.printf(MESSAGE_TEMPLATE_RELEASE_LOCK,currentThreadName,NAME_FIRST_LOCK);
         }
+    }
+    private boolean tryAcquireSecondLock(){
+        final String currentThreadName=Thread.currentThread().getName();
+        System.out.printf(MESSAGE_TEMPLATE_TRY_ACQUIRE_LOCK,currentThreadName,NAME_SECOND_LOCK);
+        return this.secondLock.tryLock();
     }
 }
